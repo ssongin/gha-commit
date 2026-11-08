@@ -24,7 +24,7 @@ The tagger also skips `chore(release)` commits, which are commonly generated
 by release automation. A breaking-change marker overrides the normal bump:
 append `!` after the prefix or scope to request a major bump. For example,
 `fix(api)!: change the error response` is a major change despite the `fix`
-prefix. See [Version tagging](tagging.md) for footer syntax and details.
+prefix. See [Bump version tag](tagging.md) for footer syntax and details.
 
 ## Header examples
 
@@ -39,4 +39,4 @@ build(deps)!: drop support for the old runtime
 The third example creates a major bump because it includes `!`. A breaking
 change can also be declared with a `BREAKING CHANGE:` or
 `BREAKING-CHANGE:` footer; those footer forms are described in the
-[tagging guide](tagging.md).
+[version tagging guide](tagging.md).

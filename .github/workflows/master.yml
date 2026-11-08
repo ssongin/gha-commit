@@ -1,4 +1,4 @@
-name: Deploy documentation
+name: Publish documentation to GitHub Pages
 
 on:
   push:
@@ -6,9 +6,6 @@ on:
       - master
   pull_request:
     types:
-      - opened
-      - synchronize
-      - reopened
       - closed
 
 permissions:
@@ -16,7 +13,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  deploy:
+  publish-docs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     uses: ssongin/gha-docs/.github/workflows/publish-docs.yml@master
     with:

@@ -4,17 +4,24 @@ on:
   workflow_call:
     inputs:
       commit_message:
-        description: Commit message to validate
-        required: true
+        description: Commit message to validate; defaults to the current push commit or pull request head
+        required: false
+        default: ''
         type: string
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
+      - name: Extract commit message
+        if: inputs.commit_message == ''
+        id: extract
+        uses: ssongin/gha-commit/.github/actions/extract-last-commit-message@master
       - name: Check Conventional Commits header
         env:
-          COMMIT_MESSAGE: ${{ inputs.commit_message }}
+          COMMIT_MESSAGE: ${{ inputs.commit_message || steps.extract.outputs.message }}
         shell: bash
         run: |
           header="${COMMIT_MESSAGE%%$'\n'*}"
