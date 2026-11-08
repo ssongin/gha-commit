@@ -1,0 +1,25 @@
+name: Validate commit message
+
+on:
+  workflow_call:
+    inputs:
+      commit_message:
+        description: Commit message to validate
+        required: true
+        type: string
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Conventional Commits header
+        env:
+          COMMIT_MESSAGE: ${{ inputs.commit_message }}
+        shell: bash
+        run: |
+          header="${COMMIT_MESSAGE%%$'\n'*}"
+          pattern='^(epic|major|feat|fix|build|chore|perf|refactor|revert|style|cicd|docs|test)(\([^)]+\))?!?: .+$'
+          if [[ ! "$header" =~ $pattern ]]; then
+            echo "::error::Commit message must use an allowed type and Conventional Commits header format: <type>[optional scope][!]: <description>"
+            exit 1
+          fi

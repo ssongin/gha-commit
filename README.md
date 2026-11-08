@@ -1,2 +1,6 @@
 # gha-commit
-Github action to verify commit message and based on massage create tag
+
+Reusable GitHub Actions workflows for validating Conventional Commit messages
+and creating semantic-version Git tags.
+
+See the [documentation](docs/index.md) for setup and usage.

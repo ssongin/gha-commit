@@ -1,0 +1,115 @@
+name: Bump version tag
+
+on:
+  workflow_call:
+    inputs:
+      commit_message:
+        description: Commit message used to determine the version increment
+        required: true
+        type: string
+      tag_prefix:
+        description: Prefix used for version tags
+        required: false
+        default: v
+        type: string
+      initial_version:
+        description: Baseline semantic version used when no matching tag exists
+        required: false
+        default: 0.0.0
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create semantic version tag
+        env:
+          COMMIT_MESSAGE: ${{ inputs.commit_message }}
+          TAG_PREFIX: ${{ inputs.tag_prefix }}
+          INITIAL_VERSION: ${{ inputs.initial_version }}
+          COMMIT_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          header="${COMMIT_MESSAGE%%$'\n'*}"
+          pattern='^(epic|major|feat|fix|build|chore|perf|refactor|revert|style|cicd|docs|test)(\(([^)]+)\))?(!)?: .+$'
+          if [[ ! "$header" =~ $pattern ]]; then
+            echo "::error::Commit message must use an allowed type and Conventional Commits header format: <type>[optional scope][!]: <description>"
+            exit 1
+          fi
+
+          type="${BASH_REMATCH[1]}"
+          scope="${BASH_REMATCH[3]}"
+          breaking="${BASH_REMATCH[4]}"
+          bump=""
+          if [[ -n "$breaking" ]] || grep -Eq '^[[:space:]]*BREAKING(-| )CHANGE: ' <<< "$COMMIT_MESSAGE"; then
+            bump=major
+          else
+            case "$type" in
+              feat) bump=minor ;;
+              epic|major) bump=major ;;
+              docs|test)
+                echo "No version bump for commit type '$type'."
+                exit 0
+                ;;
+              chore)
+                if [[ "$scope" == "release" ]]; then
+                  echo "Skipping release commit."
+                  exit 0
+                fi
+                bump=patch
+                ;;
+              fix|build|perf|refactor|revert|style|cicd) bump=patch ;;
+            esac
+          fi
+
+          version_pattern='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+          if [[ ! "$INITIAL_VERSION" =~ $version_pattern ]]; then
+            echo "::error::initial_version must be a semantic version without a prefix (for example, 0.0.0)."
+            exit 1
+          fi
+
+          latest_version="$INITIAL_VERSION"
+          while IFS= read -r tag; do
+            version="${tag#"$TAG_PREFIX"}"
+            if [[ "$version" =~ $version_pattern ]]; then
+              major="${BASH_REMATCH[1]}"
+              minor="${BASH_REMATCH[2]}"
+              patch="${BASH_REMATCH[3]}"
+              current="${major}.${minor}.${patch}"
+              if [[ "$(printf '%s\n%s\n' "$latest_version" "$current" | sort -V | tail -n 1)" == "$current" ]]; then
+                latest_version="$current"
+              fi
+            fi
+          done < <(git tag --list "${TAG_PREFIX}*")
+
+          if [[ "$latest_version" =~ $version_pattern ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
+          fi
+
+          case "$bump" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+
+          next_tag="${TAG_PREFIX}${major}.${minor}.${patch}"
+          if git rev-parse -q --verify "refs/tags/$next_tag" >/dev/null; then
+            echo "::error::Tag '$next_tag' already exists."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$next_tag" "$COMMIT_SHA" -m "$next_tag"
+          git push origin "$next_tag"
+          echo "Created tag $next_tag"
