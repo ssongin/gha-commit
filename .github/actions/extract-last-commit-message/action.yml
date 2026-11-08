@@ -1,0 +1,31 @@
+name: Extract last commit message
+description: Check out the current push commit or pull request head and expose its full commit message.
+inputs:
+  ref:
+    description: Optional commit or ref to check out instead of selecting it from the event
+    required: false
+outputs:
+  message:
+    description: Full message of the checked-out commit
+    value: ${{ steps.message.outputs.message }}
+runs:
+  using: composite
+  steps:
+    - name: Check out commit
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref != '' && inputs.ref || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number)) || github.sha }}
+    - id: message
+      name: Read commit message
+      shell: bash
+      run: |
+        message="$(git log -1 --format=%B)"
+        delimiter="gha_commit_message_${RANDOM}_${RANDOM}_${RANDOM}"
+        while [[ "$message" == *"$delimiter"* ]]; do
+          delimiter="gha_commit_message_${RANDOM}_${RANDOM}_${RANDOM}"
+        done
+        {
+          printf 'message<<%s\n' "$delimiter"
+          printf '%s\n' "$message"
+          printf '%s\n' "$delimiter"
+        } >> "$GITHUB_OUTPUT"

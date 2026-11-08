@@ -4,8 +4,9 @@ on:
   workflow_call:
     inputs:
       commit_message:
-        description: Commit message used to determine the version increment
-        required: true
+        description: Commit message used to determine the version increment; defaults to the pushed commit
+        required: false
+        default: ''
         type: string
       tag_prefix:
         description: Prefix used for version tags
@@ -25,6 +26,11 @@ jobs:
   tag:
     runs-on: ubuntu-latest
     steps:
+      - name: Extract commit message
+        if: inputs.commit_message == ''
+        id: extract
+        uses: ssongin/gha-commit/.github/actions/extract-last-commit-message@master
+
       - name: Check out repository history
         uses: actions/checkout@v4
         with:
@@ -32,7 +38,7 @@ jobs:
 
       - name: Create semantic version tag
         env:
-          COMMIT_MESSAGE: ${{ inputs.commit_message }}
+          COMMIT_MESSAGE: ${{ inputs.commit_message || steps.extract.outputs.message }}
           TAG_PREFIX: ${{ inputs.tag_prefix }}
           INITIAL_VERSION: ${{ inputs.initial_version }}
           COMMIT_SHA: ${{ github.sha }}

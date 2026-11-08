@@ -4,26 +4,28 @@ layout: home
 hero:
   name: gha-commit
   text: Reusable commit workflows
-  tagline: Validate Conventional Commit messages and create semantic-version Git tags.
+  tagline: Extract commit messages, validate Conventional Commits, and create semantic-version tags.
   actions:
     - theme: brand
-      text: Get started
-      link: /validation
+      text: Explore actions
+      link: /extract-last-commit-message
     - theme: alt
-      text: Conventional Commits
-      link: https://www.conventionalcommits.org/en/v1.0.0/
+      text: Reference
+      link: /useful-links
 
 features:
+  - title: Extract commit messages
+    details: Reuse an action to read the full message of a push or pull request head commit.
   - title: Validate commit messages
     details: Check a message header against the Conventional Commits format.
   - title: Create semantic version tags
     details: Increment major, minor, or patch versions based on the commit type and breaking-change marker.
-  - title: Reuse independently
-    details: Call either workflow from a separate repository.
 ---
 
-`gha-commit` provides reusable GitHub Actions workflows for projects that want
-to validate commit messages and create Git version tags.
+`gha-commit` provides reusable GitHub Actions for extracting and validating
+commit messages and creating Git version tags.
 
-Explore the guides for [commit validation](validation.md),
-[version tagging](tagging.md), and the [allowed prefix reference](prefixes.md).
+Browse the [Actions](extract-last-commit-message.md) guides, including the
+[combined usage example](combined-usage.md), or visit the
+[Reference](prefixes.md) pages for [allowed prefixes](prefixes.md) and
+[useful links](useful-links.md).
