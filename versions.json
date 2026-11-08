@@ -2,5 +2,9 @@
   {
     "label": "Latest (master)",
     "path": ""
+  },
+  {
+    "label": "PR #2",
+    "path": "pr-2/"
   }
 ]
