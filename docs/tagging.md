@@ -45,8 +45,7 @@ the new tag:
 | `commit_message` | `string` | No | Automatically extracted | Message used to validate the header and choose the version increment. |
 | `tag_prefix` | `string` | No | `v` | Prefix used to find and create version tags. |
 | `initial_version` | `string` | No | `0.0.0` | Baseline semantic version if no matching tag exists; do not include the prefix. |
-
-This reusable workflow has no outputs.
+| `tag` output | `string` | — | Empty if no tag was created | Version tag created by this workflow. |
 
 ## Examples
 
@@ -99,3 +98,14 @@ The workflows can be called independently. When using validation and tagging
 together, call them in separate jobs with event-appropriate conditions.
 Pin reusable workflows to a reviewed release tag or full commit SHA instead
 of `@master` for production use.
+
+Use the `tag` output in downstream jobs when they need the newly created tag:
+
+```yaml
+  publish-tagged-docs:
+    needs: bump-version-tag
+    if: needs.bump-version-tag.outputs.tag != ''
+    uses: ./.github/workflows/publish-docs.yml
+    with:
+      deployment_path: versions/${{ needs.bump-version-tag.outputs.tag }}
+```

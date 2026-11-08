@@ -18,13 +18,19 @@ on:
         required: false
         default: 0.0.0
         type: string
-
+    outputs:
+      tag:
+        description: Version tag created by this workflow, or empty when no tag was created
+        value: ${{ jobs.tag.outputs.tag }}
+    
 permissions:
   contents: write
 
 jobs:
   tag:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.create-tag.outputs.tag }}
     steps:
       - name: Extract commit message
         if: inputs.commit_message == ''
@@ -37,6 +43,7 @@ jobs:
           fetch-depth: 0
 
       - name: Create semantic version tag
+        id: create-tag
         env:
           COMMIT_MESSAGE: ${{ inputs.commit_message || steps.extract.outputs.message }}
           TAG_PREFIX: ${{ inputs.tag_prefix }}
@@ -118,4 +125,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$next_tag" "$COMMIT_SHA" -m "$next_tag"
           git push origin "$next_tag"
+          echo "tag=$next_tag" >> "$GITHUB_OUTPUT"
           echo "Created tag $next_tag"
